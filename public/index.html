@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta name="description" content=""/>
-    <meta name="author" content=""/>
+    <meta name="description" content="BooktrackApp"/>
+    <meta name="author" content="Evelin Joemaa"/>
 
-    <title>Books</title>
+    <title>Booktrack</title>
 
     <!-- Core theme CSS (includes Bootstrap)-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
@@ -26,19 +26,47 @@
         #book-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            grid-gap: 1rem;
+            grid-gap: 3rem;
             grid-auto-rows: minmax(100px, auto);
+            background-color: #99A799;
+            border: 2rem solid #99A799;
         }
 
         .book-card {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background-color: #99A799;
+            border: 2px solid #435e43;
             border-radius: .25rem;
             padding: 1rem;
         }
 
         .book-card:hover {
-            background-color: #e9ecef;
+            background-color: #b4c4b4;
+        }
+
+        body {
+            background-color: #99A799
+        }
+
+        p {
+            font-size: x-large;
+            color: #000000;
+            font-weight: bold
+        }
+
+        h1 {
+            font-size: 4rem;
+            color: #000000
+
+        }
+
+        h2 {
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #435e43;
+            border-color: #3e5b3e;
         }
 
     </style>
@@ -50,12 +78,13 @@
     <!-- Page content-->
     <div class="container">
         <div class="text-center mt-5">
-            <h1>Booktracking app</h1>
-            <p class="lead">Track the books you read</p>
+            <h1>Booktrack</h1>
+            <h2> Make keeping track of the books you have read easy with Booktrack. Just enter the title of the book
+                along with the page count and rating!</h2>
             <div class="row">
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" v-if="!sessionId"
                         @click="showModal('signUpModal')">
-                    SignUp
+                    Sign Up
                 </button>
                 &nbsp;
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" v-if="!sessionId"
@@ -67,22 +96,22 @@
                 </button>
                 &nbsp;
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" v-if="sessionId"
-                        @click="showModal('addBooktrackModal')">
-                    Add Books
+                        @click="showModal('addBookModal')">
+                    Add Book
                 </button>
             </div>
 
-            &nbsp;
-
-            <!-- List of books -->
+            <!-- List of Books -->
             <div id="book-list">
-                <div v-for="book in booktrack" class="book-card">
+                <div v-for="book in books" class="book-card">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            @click="showModal('editBookModal', book.id)">Edit
+                    </button>
+                    <br>
                     {{ book.title }}<br>
                     {{ book.content }}
                 </div>
             </div>
-
-
         </div>
     </div>
 
@@ -147,37 +176,68 @@
     </div>
 
     <!-- Add Book Modal -->
-    <div class="modal fade" id="addBooktrackModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="signInModalLabel">Add a book</h1>
+                    <h1 class="modal-title fs-5" id="addBookModalLabel">Add Book</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3 row">
-                        <label for="addBooktrackTitle" class="col-sm-2 col-form-label">Title</label>
+                        <label for="addBookTitle" class="col-sm-2 col-form-label">Title</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="addBooktrackTitle" v-model="addBooktrackTitle">
+                            <input type="text" class="form-control" id="addBookTitle" v-model="addBookTitle">
                         </div>
                     </div>
                     <div class="mb-3 row">
-                        <label for="addBooktrackContent" class="col-sm-2 col-form-label">Content</label>
+                        <label for="addBookContent" class="col-sm-2 col-form-label">Content</label>
                         <div class="col-sm-10">
-                            <textarea class="form-control" id="addBooktrackContent"
-                                      v-model="addBooktrackContent"></textarea>
+                            <textarea class="form-control" id="addBookContent" v-model="addBookContent"></textarea>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" @click="addBooktrackTitle">Add a Book</button>
+                    <button type="button" class="btn btn-primary" @click="addBook">Add Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Book Modal -->
+    <div class="modal fade" id="editBookModal" tabindex="-1" aria-labelledby="editBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="editBookModalLabel">Edit Book</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 row">
+                        <label for="editBookTitle" class="col-sm-2 col-form-label">Title</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="editBookTitle" v-model="editBookTitle">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label for="editBookContent" class="col-sm-2 col-form-label">Content</label>
+                        <div class="col-sm-10">
+                            <textarea class="form-control" id="editBookContent" v-model="editBookContent"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" @click="editBook(book.id)">Edit Book</button>
                 </div>
             </div>
         </div>
     </div>
 
 </div>
+
+
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
 <script>
@@ -203,8 +263,10 @@
                 signInPassword: null,
                 sessionId: null,
                 books: null,
-                addBooktrackTitle: null,
-                addBooktrackContent: null
+                addBookTitle: null,
+                addBookContent: null,
+                editBookTitle: null,
+                editBookContent: null,
             }
         },
         mounted() {
@@ -213,20 +275,25 @@
 
             // If the user is logged in, get the books
             if (this.sessionId) {
-                this.getBooktrack()
+                this.getBooks()
             }
 
         },
         methods: {
 
-            getBooktrack() {
-                this.send('GET', '/booktrack').then(response => {
+            getBooks() {
+                this.send('GET', '/books').then(response => {
                     if (response.ok) {
-                        this.booktrack = response.body
+                        this.books = response.body
                     }
                 })
             },
-            showModal: function (modalId) {
+            showModal: function (modalId, Id) {
+                if (Id) {
+                    this.book = this.books.find(book => book.id === Id)
+                    this.editBookTitle = this.book.title
+                    this.editBookContent = this.book.content
+                }
                 this.modalHandler = new bootstrap.Modal(document.getElementById(modalId), {
                     keyboard: false
                 })
@@ -300,7 +367,7 @@
                     this.modalHandler.hide()
 
                     // Get the Books
-                    this.getBooktrack()
+                    this.gets()
 
                 }
             },
@@ -316,36 +383,70 @@
             clearStorageAndResetSessionId: function () {
                 localStorage.removeItem('sessionId')
                 this.sessionId = null
-                this.booktrack = null
+                this.books = null
             },
-            addBooktrackTitle: function () {
+            addBook: function () {
 
                 // Validate the form
-                if (!this.addBooktrackTitle) {
+                if (!this.addBookTitle) {
                     alert('Please enter a title')
                     return
                 }
-                if (!this.addBooktrackContent) {
+                if (!this.addBookContent) {
                     alert('Please enter some content')
                     return
                 }
                 // Validate that the content  is not too long
-                if (this.addBooktrackContent.length > 100) {
+                if (this.addBookContent.length > 1000) {
                     alert('Content is too long')
                     return
                 }
 
                 // Send POST /books
-                const title = this.addBooktrackTitle
-                const content = this.addBooktrackContent
-                this.send('POST', '/booktrack', {title, content}).then(response => {
+                const title = this.addBookTitle
+                const content = this.addBookContent
+                this.send('POST', '/books', {title, content}).then(response => {
                     if (response.ok) {
                         alert('Book added')
-                        this.booktrack.push(response.body)
+                        this.books.push(response.body)
                         this.modalHandler.hide()
                     }
                 })
 
+            },
+            editBook: function (bookId) {
+
+                // Validate the form
+                if (!this.editBookTitle) {
+                    alert('Please enter a valid title')
+                    return
+                }
+                if (!this.editBookContent) {
+                    alert('Please enter valid content')
+                    return
+                }
+                // Validate that content string is not too long
+                if (this.editBookContent.length > 500) {
+                    alert('Content is too long')
+                    return
+                }
+
+                //Send PUT /books/:id
+                const title = this.editBookTitle
+                const content = this.editBookContent
+                this.send('PUT', '/books/' + bookId, {title, content}).then(response => {
+                    if (response.ok) {
+                        // Book updated
+                        const bookIndex = this.books.findIndex(book => book.id === bookId)
+                        if (bookIndex !== -1) {
+                            this.books[bookIndex].title = title
+                            this.books[bookIndex].content = content
+                        }
+                        this.modalHandler.hide()
+                    } else {
+                        alert('Error editing the book')
+                    }
+                })
             }
         }
     }).mount('#app')

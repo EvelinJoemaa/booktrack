@@ -116,7 +116,7 @@ paths:
         - Bearer: [ ]
       summary: Destroy a Session
       description: 'Destroys a `Session`, signing the user out. Reads the session ID from Authorization header.'
-  /booktrack:
+  /books:
     summary: Path used to manage the list of books.
     description: >-
       The REST endpoint/path used to list and create zero or more `Book` entities.  This path contains a
@@ -193,6 +193,39 @@ paths:
       operationId: addBook
       summary: Add a Book
       description: Creates a new instance of a `Book`.
+  '/books/:id':
+    summary: Path used to manage the list of books.
+    description: >-
+      The REST endpoint/path used to edit `Book` entities.  This path contains a `PUT` operation to
+      perform the edit books.
+    put:
+      requestBody:
+        description: A `Book` to be edited.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+            examples:
+              Book:
+                value:
+                  content: text
+                  title: text
+        required: true
+      tags:
+        - '/books/:id'
+      responses:
+        '400':
+          description: Bad request (Title and content are required)
+        '401':
+          description: Unauthorized
+        '404':
+          description: Book ID not found.
+      deprecated: false
+      security:
+        - Bearer: [ ]
+      operationId: editBook
+      summary: Edit Book
+      description: Updates an instance of `Book`.
 components:
   schemas:
     User:

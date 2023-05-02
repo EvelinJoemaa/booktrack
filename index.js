@@ -19,7 +19,7 @@ const users = [
     {id: 1, email: 'admin', password: '$2b$10$0EfA6fMFRDVQWzU0WR1dmelPA7.qSp7ZYJAgneGsy2ikQltX2Duey'} // KollneKollne
 ]
 
-const booktrack = [
+const books = [
     {
         id: 1,
         title: 'Book 1',
@@ -129,7 +129,6 @@ app.post('/sessions', async (req, res) => {
         console.error(error);
         res.status(500).send('Internal server error')
     }
-
 })
 
 function authorizeRequest(req, res, next) {
@@ -162,38 +161,68 @@ function authorizeRequest(req, res, next) {
 
 }
 
-app.get('/booktrack', authorizeRequest, (req, res) => {
+app.get('/books', authorizeRequest, (req, res) => {
 
     // Get books for user
-    const booktrackForUser = booktrack.filter(book => book.userId === req.user.id)
+    const booksForUser = books.filter(book => book.userId === req.user.id)
 
-    // Send to client
-    res.send(booktrackForUser)
+    // Send book data to client
+    res.send(booksForUser)
+})
+app.post('/books', authorizeRequest, (req, res) => {
+
+    // Validate title and content
+    if (!req.body.title || !req.body.content) return res.status(400).send('Title and content are required')
+
+    // Find max id
+    const maxId = books.reduce((max, book) => book.id > max ? book.id : max, 0)
+
+    // Save the book to database
+    books.push({id: maxId + 1, title: req.body.title, content: req.body.content, userId: req.user.id})
+
+    // Send the book to client
+    res.status(201).send(books[books.length - 1])
 })
 
+app.delete('/books/:id', authorizeRequest, (req, res) => {
+
+    // Find the book in database
+    const book = books.find(book => book.id === parseInt(req.params.id))
+    if (!book) return res.status(404).send('Book not found')
+
+    // Check that the book belongs to the correct user
+    if (book.userId !== req.user.id) return res.status(401).send('Unauthorized')
+
+    // Remove the book from read books
+    books.splice(books.indexOf(book), 1)
+
+    res.status(204).end()
+})
+app.put('/books/:id', authorizeRequest, (req, res) => {
+
+    // Validate title and content
+    if (!req.body.title || !req.body.content) return res.status(400).send('Title and content are required')
+
+    // Find the book in database
+    const book = books.find(book => book.id === parseInt(req.params.id))
+    if (!book) return res.status(404).send('Book not found')
+
+    // Check that the book belongs to the user
+    if (book.userId !== req.user.id) return res.status(401).send('Unauthorized')
+
+    // Update the book
+    book.title = req.body.title
+    book.content = req.body.content
+
+    // Send requested book to client
+    res.send(book)
+})
 app.delete('/sessions', authorizeRequest, (req, res) => {
 
     // Remove session from sessions array
     sessions = sessions.filter(session => session.id !== req.session.id)
 
     res.status(204).end()
-
-})
-
-app.post('/booktrack', authorizeRequest, (req, res) => {
-
-    // Validate title and content
-    if (!req.body.title || !req.body.content) return res.status(400).send('Title and content are required')
-
-    // Find max id
-    const maxId = booktrack.reduce((max, book) => book.id > max ? book.id : max, booktrack[0].id)
-
-    // Save to database
-    booktrack.push({id: maxId + 1, title: req.body.title, content: req.body.content, userId: req.user.id})
-
-    // Send to client
-    res.status(201).send(booktrack[booktrack.length - 1])
-
 })
 
 app.listen(port, () => {
