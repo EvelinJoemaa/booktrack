@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt')
 const app = express()
 require('dotenv').config()
 const port = process.env.PORT || 3000
+let expressWs = require('express-ws')(app);
 const {v4: uuidv4} = require('uuid');
 
 // Add Swagger UI
@@ -14,7 +15,12 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(express.static('public'))
 app.use(express.json())
-
+app.ws('/', function (ws, req) {
+    ws.on('message', function (msg) {
+        expressWs.getWss().clients.forEach(client => client.send(msg));
+    });
+    console.log('socket', req.testing);
+});
 const users = [
     {id: 1, email: 'admin', password: '$2b$10$0EfA6fMFRDVQWzU0WR1dmelPA7.qSp7ZYJAgneGsy2ikQltX2Duey'} // KollneKollne
 ]
@@ -23,7 +29,7 @@ const books = [
     {
         id: 1,
         title: 'Book 1',
-        content: 'Information about Book 1',
+        content: 'Information about Book 1dfrsfsdf66',
         userId: 1
     },
     {
@@ -47,7 +53,7 @@ let sessions = [
 
 function tryToParseJson(jsonString) {
     try {
-        var o = JSON.parse(jsonString);
+        let o = JSON.parse(jsonString);
         if (o && typeof o === "object") {
             return o;
         }
@@ -56,6 +62,7 @@ function tryToParseJson(jsonString) {
     return false;
 }
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
 app.post('/users', async (req, res) => {
 
     // Validate email and password
@@ -161,8 +168,8 @@ function authorizeRequest(req, res, next) {
 
 }
 
-app.get('/books', authorizeRequest, (req, res) => {
-
+app.get('/books', authorizeRequest, async (req, res) => {
+    await delay(10000);
     // Get books for user
     const booksForUser = books.filter(book => book.userId === req.user.id)
 
@@ -195,7 +202,7 @@ app.delete('/books/:id', authorizeRequest, (req, res) => {
 
     // Remove the book from read books
     books.splice(books.indexOf(book), 1)
-
+    expressWs.getWss().clients.forEach(client => client.send(parseInt(req.params.id)));
     res.status(204).end()
 })
 app.put('/books/:id', authorizeRequest, (req, res) => {
@@ -213,7 +220,7 @@ app.put('/books/:id', authorizeRequest, (req, res) => {
     // Update the book
     book.title = req.body.title
     book.content = req.body.content
-
+    expressWs.getWss().clients.forEach(client => client.send(book.id));
     // Send requested book to client
     res.send(book)
 })

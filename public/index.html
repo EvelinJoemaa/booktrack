@@ -269,6 +269,7 @@
                 editBookContent: null,
             }
         },
+
         mounted() {
             // Check if the user is already logged in from local storage
             this.sessionId = localStorage.getItem('sessionId')
@@ -280,6 +281,20 @@
 
         },
         methods: {
+            async oldBooks() {
+                this.books = JSON.parse(localStorage.getItem("books"));
+                console.table(this.books);
+                let response;
+                try {
+                    response = await this.send('GET', 'http://localhost:4000/books/available');
+                } catch (e) {
+                    alert("Network error")
+                }
+
+                localStorage.setItem("books", JSON.stringify(response.body));
+                this.books = response.body;
+                this.sessionId = localStorage.getItem("sessionId");
+            },
 
             getBooks() {
                 this.send('GET', '/books').then(response => {
@@ -367,7 +382,7 @@
                     this.modalHandler.hide()
 
                     // Get the Books
-                    this.gets()
+                    this.get()
 
                 }
             },
@@ -450,6 +465,17 @@
             }
         }
     }).mount('#app')
+
+    const connection = new WebSocket("ws://localhost:4000/")
+    connection.onmessage = function (event) {
+        if (!(isNaN(parseInt(event.data)))) {
+            vue.removeBook(parseInt(event.data))
+        } else {
+            vue.removeBook(parseInt(tryToParseJSON(event.data).id))
+            vue.books.push(tryToParseJSON(event.data));
+            vue.sortBooks()
+        }
+    }
 </script>
 
 <!-- Bootstrap core JS-->

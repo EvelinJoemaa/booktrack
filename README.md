@@ -1,7 +1,8 @@
 # booktrack
 
-This is a simple booktracking app with VUE and Express. It uses plain json array to store notes.
-
+This is a simple booktracking app with VUE and Express. It uses plain json array to store information about the books
+users have read.
+npm
 ## Project management
 
 [https://www.pivotaltracker.com/n/projects/2633250](https://www.pivotaltracker.com/n/projects/2633250)
