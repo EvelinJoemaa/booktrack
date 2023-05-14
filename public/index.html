@@ -270,32 +270,36 @@
             }
         },
 
-        mounted() {
+        async mounted() {
             // Check if the user is already logged in from local storage
             this.sessionId = localStorage.getItem('sessionId')
 
             // If the user is logged in, get the books
             if (this.sessionId) {
                 this.getBooks()
+                // Read the books from local storage
+                this.books = JSON.parse(localStorage.getItem("books"));
+                console.table(this.books);
+
+                //Get the books from the server
+                let response;
+                try {
+                    response = await this.send('GET', 'http://localhost:4000/books');
+
+                    // Save the books in local storage
+                    localStorage.setItem("books", JSON.stringify(response.body));
+
+                    // Set the books to the response of the server
+                    this.books = response.body;
+
+                } catch (e) { // If there is an error, alert the user
+                    alert("Network error")
+                }
+
             }
 
         },
         methods: {
-            async oldBooks() {
-                this.books = JSON.parse(localStorage.getItem("books"));
-                console.table(this.books);
-                let response;
-                try {
-                    response = await this.send('GET', 'http://localhost:4000/books/available');
-                } catch (e) {
-                    alert("Network error")
-                }
-
-                localStorage.setItem("books", JSON.stringify(response.body));
-                this.books = response.body;
-                this.sessionId = localStorage.getItem("sessionId");
-            },
-
             getBooks() {
                 this.send('GET', '/books').then(response => {
                     if (response.ok) {
@@ -382,7 +386,7 @@
                     this.modalHandler.hide()
 
                     // Get the Books
-                    this.get()
+                    this.getBooks()
 
                 }
             },
