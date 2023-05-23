@@ -29,7 +29,7 @@ const books = [
     {
         id: 1,
         title: 'Book 1',
-        content: 'Information about Book 1dfrsfsdf66',
+        content: 'Information about Book 1',
         userId: 1
     },
     {
@@ -62,7 +62,8 @@ function tryToParseJson(jsonString) {
     return false;
 }
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
+//const delay = ms => new Promise(res => setTimeout(res, ms));
+
 app.post('/users', async (req, res) => {
 
     // Validate email and password
@@ -103,7 +104,6 @@ app.post('/users', async (req, res) => {
     users.push({id: maxId + 1, email: req.body.email, password: hashedPassword})
 
     res.status(201).end()
-
 })
 
 // POST /sessions
@@ -169,13 +169,14 @@ function authorizeRequest(req, res, next) {
 }
 
 app.get('/books', authorizeRequest, async (req, res) => {
-    await delay(10000);
+    // await delay(10000); // Simulate slow connection
     // Get books for user
     const booksForUser = books.filter(book => book.userId === req.user.id)
 
     // Send book data to client
     res.send(booksForUser)
 })
+
 app.post('/books', authorizeRequest, (req, res) => {
 
     // Validate title and content
@@ -185,9 +186,14 @@ app.post('/books', authorizeRequest, (req, res) => {
     const maxId = books.reduce((max, book) => book.id > max ? book.id : max, 0)
 
     // Save the book to database
-    books.push({id: maxId + 1, title: req.body.title, content: req.body.content, userId: req.user.id})
+    const book = {id: maxId + 1, title: req.body.title, content: req.body.content, userId: req.user.id}
+
+    //Add book to books array
+    books.push(book)
+
 
     // Send the book to client
+    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'create', book})));
     res.status(201).send(books[books.length - 1])
 })
 
@@ -202,9 +208,13 @@ app.delete('/books/:id', authorizeRequest, (req, res) => {
 
     // Remove the book from read books
     books.splice(books.indexOf(book), 1)
-    expressWs.getWss().clients.forEach(client => client.send(parseInt(req.params.id)));
+
+    // Send delete event to clients
+    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'delete', book})));
+
     res.status(204).end()
 })
+
 app.put('/books/:id', authorizeRequest, (req, res) => {
 
     // Validate title and content
@@ -220,10 +230,14 @@ app.put('/books/:id', authorizeRequest, (req, res) => {
     // Update the book
     book.title = req.body.title
     book.content = req.body.content
-    expressWs.getWss().clients.forEach(client => client.send(book.id));
+
+    // Send update event to clients
+    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'update', book})));
+
     // Send requested book to client
     res.send(book)
 })
+
 app.delete('/sessions', authorizeRequest, (req, res) => {
 
     // Remove session from sessions array

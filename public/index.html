@@ -86,7 +86,6 @@
                         @click="showModal('signUpModal')">
                     Sign Up
                 </button>
-                &nbsp;
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" v-if="!sessionId"
                         @click="showModal('signInModal')">
                     Sign In
@@ -94,7 +93,6 @@
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" v-if="sessionId" @click="signOut">
                     Sign Out
                 </button>
-                &nbsp;
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" v-if="sessionId"
                         @click="showModal('addBookModal')">
                     Add Book
@@ -139,7 +137,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" @click="signUp">SignUp</button>
+                    <button type="button" class="btn btn-primary" @click="signUp">Sign Up</button>
                 </div>
             </div>
         </div>
@@ -234,9 +232,7 @@
             </div>
         </div>
     </div>
-
 </div>
-
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
@@ -253,7 +249,7 @@
         return false
     }
 
-    Vue.createApp({
+    const vue = Vue.createApp({
         data() {
             return {
                 modalHandler: null,
@@ -270,73 +266,64 @@
             }
         },
 
+
         async mounted() {
             // Check if the user is already logged in from local storage
-            this.sessionId = localStorage.getItem('sessionId')
+            this.sessionId = localStorage.getItem('sessionId');
 
             // If the user is logged in, get the books
             if (this.sessionId) {
-                this.getBooks()
-                // Read the books from local storage
-                this.books = JSON.parse(localStorage.getItem("books"));
-                console.table(this.books);
+                // Call the function to retrieve books from local storage
+                this.getBooksFromLocalStorage();
 
-                //Get the books from the server
-                let response;
-                try {
-                    response = await this.send('GET', 'http://localhost:4000/books');
-
-                    // Save the books in local storage
-                    localStorage.setItem("books", JSON.stringify(response.body));
-
-                    // Set the books to the response of the server
-                    this.books = response.body;
-
-                } catch (e) { // If there is an error, alert the user
-                    alert("Network error")
-                }
-
+                // Call the asynchronous function to fetch books from the server
+                await this.fetchBooksFromServer();
             }
-
         },
+
+
         methods: {
-            getBooks() {
-                this.send('GET', '/books').then(response => {
-                    if (response.ok) {
-                        this.books = response.body
-                    }
-                })
+            getBooksFromLocalStorage() {
+                this.books = JSON.parse(localStorage.getItem('books'));
             },
-            showModal: function (modalId, Id) {
-                if (Id) {
-                    this.book = this.books.find(book => book.id === Id)
-                    this.editBookTitle = this.book.title
-                    this.editBookContent = this.book.content
+            async fetchBooksFromServer() {
+                const response = await this.send('GET', '/books');
+                if (response.ok) {
+                    this.books = response.body;
+                    localStorage.setItem('books', JSON.stringify(this.books));
                 }
+            },
+            showModal(modalId, Id) {
+                if (Id) {
+                    this.book = this.books.find(book => book.id === Id);
+                    this.editBookTitle = this.book.title;
+                    this.editBookContent = this.book.content;
+                }
+
                 this.modalHandler = new bootstrap.Modal(document.getElementById(modalId), {
                     keyboard: false
-                })
-                this.modalHandler.show()
+                });
+                this.modalHandler.show();
             },
             send: function (method, url, body) {
                 const vue = this;
 
-                async function CheckError(response) {
+                async function checkError(response) {
                     if (response.status >= 200 && response.status <= 299) {
-                        let responseText = await response.text()
-                        return {ok: true, status: response.status, body: tryToParseJSON(responseText)}
+                        const responseText = await response.text();
+                        return {ok: true, status: response.status, body: tryToParseJSON(responseText)};
                     } else {
-                        let responseText = await response.text()
-                        let responseObject = tryToParseJSON(responseText)
+                        const responseText = await response.text();
+                        const responseObject = tryToParseJSON(responseText);
                         if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
-                            alert('Error code ' + response.status + ":\n" + responseObject.error)
+                            alert('Error code ' + response.status + ":\n" + responseObject.error);
                         } else {
-                            alert('Error code ' + response.status + ":\n" + responseText)
+                            alert('Error code ' + response.status + ":\n" + responseText);
                         }
                         if (response.status === 401) {
                             vue.clearStorageAndResetSessionId();
                         }
-                        return {ok: false, status: response.status, body: responseObject || responseText}
+                        return {ok: false, status: response.status, body: responseObject || responseText};
                     }
                 }
 
@@ -346,18 +333,23 @@
                 if (this.sessionId) {
                     headers.Authorization = "Bearer " + this.sessionId;
                 }
+
+                //return network error when fetch fails
                 return fetch(url, {
                     method: method,
-                    headers,
+                    headers: headers,
                     body: JSON.stringify(body)
                 })
-                    .then(CheckError)
-                    .then((jsonResponse) => {
-                        return jsonResponse
-                    }).catch((error) => {
+                    .then(checkError)
+                    .then(jsonResponse => {
+                        return jsonResponse;
+                    })
+                    .catch(error => {
                         throw Error('Network error: ' + error);
                     });
             },
+
+
             signUp: async function () {
                 // Send POST /users
                 const email = this.signUpEmail
@@ -367,8 +359,8 @@
                     alert('User created')
                     this.modalHandler.hide()
                 }
-
             },
+
             signIn: async function () {
                 // Send POST /sessions
                 const email = this.signInEmail
@@ -385,9 +377,11 @@
                     // Close the modal
                     this.modalHandler.hide()
 
-                    // Get the Books
-                    this.getBooks()
-
+                    // Get books from local storage
+                    this.getBooksFromLocalStorage()
+                    alert('Showing data from local storage')
+                    await this.fetchBooksFromServer()
+                    alert('Data updated from server')
                 }
             },
             signOut: async function () {
@@ -399,11 +393,13 @@
                 }
 
             },
+
             clearStorageAndResetSessionId: function () {
                 localStorage.removeItem('sessionId')
                 this.sessionId = null
                 this.books = null
             },
+
             addBook: function () {
 
                 // Validate the form
@@ -421,18 +417,27 @@
                     return
                 }
 
+                // Validate that the title is not too long
+                if (this.addBookTitle.length > 100) {
+                    alert('Title is too long')
+                    return
+                }
+
                 // Send POST /books
                 const title = this.addBookTitle
                 const content = this.addBookContent
                 this.send('POST', '/books', {title, content}).then(response => {
                     if (response.ok) {
+                        this.fetchBooksFromServer()
                         alert('Book added')
+
                         this.books.push(response.body)
                         this.modalHandler.hide()
                     }
                 })
 
             },
+
             editBook: function (bookId) {
 
                 // Validate the form
@@ -445,8 +450,14 @@
                     return
                 }
                 // Validate that content string is not too long
-                if (this.editBookContent.length > 500) {
+                if (this.editBookContent.length > 1000) {
                     alert('Content is too long')
+                    return
+                }
+
+                // Validate that title string is not too long
+                if (this.editBookTitle.length > 100) {
+                    alert('Title is too long')
                     return
                 }
 
@@ -470,22 +481,26 @@
         }
     }).mount('#app')
 
-    const connection = new WebSocket("ws://localhost:4000/")
-    connection.onmessage = function (event) {
-        if (!(isNaN(parseInt(event.data)))) {
-            vue.removeBook(parseInt(event.data))
-        } else {
-            vue.removeBook(parseInt(tryToParseJSON(event.data).id))
-            vue.books.push(tryToParseJSON(event.data));
-            vue.sortBooks()
+    // Connect to WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const connection = new WebSocket(`${protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`);
+    connection.onmessage = ({data}) => {
+        const {event, book} = tryToParseJSON(data);
+
+        if (event === 'create') {
+            vue.books.push(book);
+        } else if (event === 'update') {
+            const index = vue.books.findIndex(b => b.id === book.id);
+            if (index !== -1) {
+                vue.books.splice(index, 1, book);
+            }
         }
-    }
+    };
 </script>
 
 <!-- Bootstrap core JS-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
         integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
         crossorigin="anonymous"></script>
-
 </body>
 </html>
