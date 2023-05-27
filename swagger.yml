@@ -226,6 +226,30 @@ paths:
       operationId: editBook
       summary: Edit Book
       description: Updates an instance of `Book`.
+
+    delete:
+      tags:
+        - '/books/:id'
+      responses:
+        '204':
+          description: Successful response - delete book
+        '401':
+          content:
+            text/xml:
+              examples:
+                Missing authorization header:
+                  value: Missing authorization header
+                Invalid session:
+                  value: Invalid session
+          description: Unauthorized
+        '404':
+          description: Book not found
+      deprecated: false
+      security:
+        - Bearer: [ ]
+      operationId: deleteBook
+      summary: Delete the book
+      description: Deletes an instance of `Book`.
 components:
   schemas:
     User:
@@ -305,4 +329,6 @@ tags:
   - name: /sessions
     description: ''
   - name: /books
+    description: ''
+  - name: '/books/:id'
     description: ''

@@ -67,6 +67,7 @@
         .btn-primary {
             background-color: #435e43;
             border-color: #3e5b3e;
+            margin-right: 5px;
         }
 
     </style>
@@ -104,9 +105,14 @@
             <!-- List of Books -->
             <div id="book-list">
                 <div v-for="book in books" class="book-card">
+
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                             @click="showModal('editBookModal', book.id)">Edit
                     </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            @click="deleteBook(book.id)">Delete
+                    </button>
+
                     <br>
                     {{ book.title }}<br>
                     {{ book.content }}
@@ -438,6 +444,16 @@
                 })
 
             },
+            deleteBook: function (bookId) {
+                // Send DELETE /books/:id
+                this.send('DELETE', '/books/' + bookId).then(response => {
+                    if (response.ok) {
+                        this.fetchBooksFromServer()
+                        alert('Book deleted')
+                        this.books = this.books.filter(book => book.id !== bookId)
+                    }
+                })
+            },
             editBook: function (bookId) {
 
                 // Validate the form
@@ -483,19 +499,27 @@
 
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const connection = new WebSocket(`${protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`);
-    connection.onmessage = ({data}) => {
-        const {event, book} = tryToParseJSON(data);
+    const connection = new WebSocket(`${protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}`)
+    connection.onmessage = function (message) {
+        message = tryToParseJSON(message.data)
 
-        if (event === 'create') {
-            vue.books.push(book);
-        } else if (event === 'update') {
-            const index = vue.books.findIndex(b => b.id === book.id);
-            if (index !== -1) {
-                vue.books.splice(index, 1, book);
-            }
+        switch (message.event) {
+            case 'create':
+                vue.books.push(message.book)
+                break
+            case 'update':
+                vue.books = vue.books.map(book => {
+                    if (book.id === message.book.id) {
+                        return message.book
+                    }
+                    return book
+                })
+                break
+            case 'delete':
+                vue.books = vue.books.filter(book => book.id !== message.id)
+                break
         }
-    };
+    }
 </script>
 
 <!-- Bootstrap core JS-->

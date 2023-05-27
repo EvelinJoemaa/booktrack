@@ -210,7 +210,7 @@ app.delete('/books/:id', authorizeRequest, (req, res) => {
     books.splice(books.indexOf(book), 1)
 
     // Send delete event to clients
-    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'delete', book})));
+    expressWs.getWss().clients.forEach(client => client.send(JSON.stringify({event: 'delete', id: book.id})));
 
     res.status(204).end()
 })
