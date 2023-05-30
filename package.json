@@ -18,9 +18,12 @@
     "nodemon": "^2.0.20",
     "swagger-ui-express": "^4.6.1",
     "uuid": "^9.0.0",
+    "vue": "^3.3.2",
     "websocket": "^1.0.34",
     "ws": "^8.13.0",
-    "yamljs": "^0.3.0",
-    "vue": "^3.3.2"
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "cypress": "^10.11.0"
   }
 }
