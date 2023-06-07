@@ -72,6 +72,8 @@ paths:
               examples:
                 Email and password are required:
                   value: Email and password are required
+                Invalid authorization header:
+                  value: Invalid authorization header
           description: Bad Request
         '401':
           content:
@@ -79,6 +81,10 @@ paths:
               examples:
                 Invalid password:
                   value: Invalid password
+                Missing authorization header:
+                  value: Missing authorization header
+                Invalid session:
+                  value: Invalid session
           description: Unauthorized
         '404':
           content:
@@ -87,12 +93,26 @@ paths:
                 User not found:
                   value: User not found
           description: Not Found
+        '500':
+          content:
+            text/html:
+              examples:
+                User not found:
+                  value: Internal server error
+          description: Not Found
       operationId: createSession
       summary: Create a Session
       description: 'Creates a new instance of a `Session`, signing the user in. Returns session ID.'
     delete:
       tags:
         - /sessions
+      parameters:
+        - name: id
+          description: Book to be deleted.
+          schema:
+            type: integer
+          in: path
+          required: true
       responses:
         '204':
           description: Successful response.
@@ -109,11 +129,16 @@ paths:
               examples:
                 Missing authorization header:
                   value: Missing authorization header
-                Invalid session:
-                  value: Invalid session
+                Invalid session id:
+                  value: Invalid session id
+                Invalid Authorization header:
+                  value: Invalid authorization header
+                Invalid user id:
+                  value: Invalid user id
           description: Unauthorized
       security:
-        - Bearer: [ ]
+        -
+          Bearer: []
       summary: Destroy a Session
       description: 'Destroys a `Session`, signing the user out. Reads the session ID from Authorization header.'
   /books:
@@ -146,11 +171,16 @@ paths:
               examples:
                 Missing authorization header:
                   value: Missing authorization header
-                Invalid session:
-                  value: Invalid session
+                Invalid session id:
+                  value: Invalid session id
+                Invalid Authorization header:
+                  value: Invalid authorization header
+                Invalid user id:
+                  value: Invalid user id
           description: Unauthorized
       security:
-        - Bearer: [ ]
+        -
+          Bearer: []
       operationId: getBooktrack
       summary: List All Books
       description: Gets a list of all `Book` entities.
@@ -185,15 +215,20 @@ paths:
               examples:
                 Missing authorization header:
                   value: Missing authorization header
-                Invalid session:
-                  value: Invalid session
+                Invalid session id:
+                  value: Invalid session id
+                Invalid Authorization header:
+                  value: Invalid authorization header
+                Invalid user id:
+                  value: Invalid user id
           description: Unauthorized
       security:
-        - Bearer: [ ]
+        -
+          Bearer: []
       operationId: addBook
       summary: Add a Book
       description: Creates a new instance of a `Book`.
-  '/books/:id':
+  '/books/{id}':
     summary: Path used to manage the list of books.
     description: >-
       The REST endpoint/path used to edit `Book` entities.  This path contains a `PUT` operation to
@@ -213,43 +248,98 @@ paths:
         required: true
       tags:
         - '/books/:id'
+      parameters:
+        -
+          name: id
+          description: Book to be edited.
+          schema:
+            type: integer
+          in: path
+          required: true
       responses:
         '400':
-          description: Bad request (Title and content are required)
+          content:
+            text/html:
+              examples:
+                Bad request (Title and content required):
+                  value: Title and content are required
+          description: Bad Request
         '401':
+          content:
+            text/html:
+              examples:
+                Missing authorization header:
+                  value: Missing authorization header
+                Invalid session id:
+                  value: Invalid session id
+                Invalid Authorization header:
+                  value: Invalid authorization header
+                Invalid user id:
+                  value: Invalid user id
           description: Unauthorized
         '404':
-          description: Book ID not found.
+          content:
+            text/html:
+              examples:
+                Book not found:
+                  value: Book not found
+          description: Not found
       deprecated: false
       security:
-        - Bearer: [ ]
+        -
+          Bearer: []
       operationId: editBook
       summary: Edit Book
       description: Updates an instance of `Book`.
-
     delete:
       tags:
         - '/books/:id'
+      parameters:
+        -
+          name: id
+          description: Book to be deleted.
+          schema:
+            type: integer
+          in: path
+          required: true
       responses:
         '204':
           description: Successful response - delete book
         '401':
           content:
-            text/xml:
+            text/html:
               examples:
                 Missing authorization header:
                   value: Missing authorization header
-                Invalid session:
-                  value: Invalid session
+                Invalid session id:
+                  value: Invalid session id
+                Invalid Authorization header:
+                  value: Invalid Authorization header
+                Invalid user id:
+                  value: Invalid user id
           description: Unauthorized
         '404':
+          content:
+            text/html:
+              examples:
+                Book not found:
+                  value: Book not found
           description: Book not found
       deprecated: false
       security:
-        - Bearer: [ ]
+        -
+          Bearer: []
       operationId: deleteBook
       summary: Delete the book
       description: Deletes an instance of `Book`.
+    parameters:
+      -
+        name: id
+        description: Book to be edited or deleted.
+        schema:
+          type: integer
+        in: path
+        required: true
 components:
   schemas:
     User:
@@ -324,11 +414,15 @@ components:
       scheme: bearer
       type: http
 tags:
-  - name: /users
+  -
+    name: /users
     description: ''
-  - name: /sessions
+  -
+    name: /sessions
     description: ''
-  - name: /books
+  -
+    name: /books
     description: ''
-  - name: '/books/:id'
+  -
+    name: '/books/:id'
     description: ''
